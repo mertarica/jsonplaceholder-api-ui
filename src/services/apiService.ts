@@ -1,10 +1,20 @@
-import type { User } from '@/types/user';
-import type { Post, CreatePostRequest } from '@/types/post';
 import type { PaginationParams } from '@/types/api';
+import { UserSchema, type User } from '@/schemas/user';
+import {
+  PostSchema,
+  CreatePostRequestSchema,
+  type CreatePostRequest,
+  type Post,
+} from '@/schemas/post';
+import { z } from 'zod';
 
 const BASE_URL = 'https://jsonplaceholder.typicode.com';
+
 class ApiError extends Error {
-  constructor(message: string, public status: number) {
+  constructor(
+    message: string,
+    public status: number
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -59,28 +69,46 @@ const api = {
 };
 
 export const userApi = {
-  getUsers: (): Promise<User[]> => api.get('/users'),
-  getUserById: (id: number): Promise<User> => api.get(`/users/${id}`),
+  getUsers: async (): Promise<User[]> => {
+    const response = await api.get('/users');
+    return z.array(UserSchema).parse(response);
+  },
+
+  getUserById: async (id: number): Promise<User> => {
+    const response = await api.get(`/users/${id}`);
+    return UserSchema.parse(response);
+  },
 };
 
 export const postApi = {
-  getPostsByUserId: (
+  getPostsByUserId: async (
     userId: number,
     pagination?: PaginationParams
   ): Promise<Post[]> => {
+    let endpoint = `/posts?userId=${userId}`;
+
     if (pagination) {
       const params = new URLSearchParams({
         userId: userId.toString(),
         _start: pagination._start.toString(),
         _limit: pagination._limit.toString(),
       });
-      return api.get(`/posts?${params}`);
+      endpoint = `/posts?${params}`;
     }
-    return api.get(`/posts?userId=${userId}`);
+
+    const response = await api.get(endpoint);
+    return z.array(PostSchema).parse(response);
   },
 
-  createPost: (post: CreatePostRequest): Promise<Post> =>
-    api.post('/posts', post),
+  createPost: async (post: CreatePostRequest): Promise<Post> => {
+    // Validate input before sending
+    const validatedPost = CreatePostRequestSchema.parse(post);
+    const response = await api.post('/posts', validatedPost);
+    return PostSchema.parse(response);
+  },
 
-  deletePost: (postId: number): Promise<void> => api.delete(`/posts/${postId}`),
+  deletePost: async (postId: number): Promise<void> => {
+    const validatedId = z.number().min(1).parse(postId);
+    return api.delete(`/posts/${validatedId}`);
+  },
 };

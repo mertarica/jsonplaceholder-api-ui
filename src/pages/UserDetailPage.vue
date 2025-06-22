@@ -98,6 +98,19 @@
               <div class="add-post">
                 <h4>Create Post</h4>
 
+                <!-- Validation Errors -->
+                <div v-if="validationErrors.length" class="validation-errors">
+                  <Message
+                    v-for="error in validationErrors"
+                    :key="error"
+                    severity="warn"
+                    :closable="false"
+                    class="validation-error"
+                  >
+                    {{ error }}
+                  </Message>
+                </div>
+
                 <!-- Create Post Error -->
                 <Message
                   v-if="createPostMutation.isError.value"
@@ -113,19 +126,25 @@
                     v-model="newPost.title"
                     placeholder="Post title..."
                     :disabled="createPostMutation.isPending.value"
+                    :class="{ 'p-invalid': titleError }"
                   />
+                  <small v-if="titleError" class="p-error">{{ titleError }}</small>
+
                   <Textarea
                     v-model="newPost.body"
                     placeholder="Write something..."
                     :disabled="createPostMutation.isPending.value"
                     rows="3"
+                    :class="{ 'p-invalid': bodyError }"
                   />
+                  <small v-if="bodyError" class="p-error">{{ bodyError }}</small>
+
                   <Button
                     type="submit"
                     label="Publish"
                     icon="pi pi-send"
                     :loading="createPostMutation.isPending.value"
-                    :disabled="!newPost.title || !newPost.body"
+                    :disabled="!isFormValid"
                   />
                 </form>
               </div>
@@ -190,11 +209,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, watch, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useUser } from '@/composables/useUsers';
 import { usePosts, useCreatePost, useDeletePost } from '@/composables/usePosts';
 import { usePostStore } from '@/stores/postStore';
+import { CreatePostRequestSchema } from '@/schemas/post';
+import { z } from 'zod';
 
 interface Props {
   id: string;
@@ -240,29 +261,83 @@ const newPost = reactive({
   body: '',
 });
 
+// Validation
+const validationErrors = ref<string[]>([]);
+const titleError = ref('');
+const bodyError = ref('');
+
+const isFormValid = computed(() => {
+  return newPost.title.trim() && newPost.body.trim() && !titleError.value && !bodyError.value;
+});
+
+// Real-time validation
+watch(() => newPost.title, (newTitle) => {
+  try {
+    z.string().min(1, 'Title is required').parse(newTitle.trim());
+    titleError.value = '';
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      titleError.value = error.errors[0]?.message || 'Invalid title';
+    }
+  }
+});
+
+watch(() => newPost.body, (newBody) => {
+  try {
+    z.string().min(1, 'Body is required').parse(newBody.trim());
+    bodyError.value = '';
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      bodyError.value = error.errors[0]?.message || 'Invalid body';
+    }
+  }
+});
+
 const handleUserError = (error: Error, info: string) => {
   console.error('User Detail Error:', error);
   console.error('Error Info:', info);
 };
 
 const handleAddPost = async () => {
-  if (newPost.title && newPost.body && userData.value) {
-    const result = await createPostMutation.mutateAsync({
-      title: newPost.title,
-      body: newPost.body,
+  if (!userData.value) return;
+  
+  // Clear previous validation errors
+  validationErrors.value = [];
+  
+  try {
+    // Validate with Zod
+    const validatedPost = CreatePostRequestSchema.parse({
+      title: newPost.title.trim(),
+      body: newPost.body.trim(),
       userId: userData.value.id,
     });
-
+    
+    const result = await createPostMutation.mutateAsync(validatedPost);
+    
     // Only clear form if successful
     if (result) {
       newPost.title = '';
       newPost.body = '';
+      titleError.value = '';
+      bodyError.value = '';
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      validationErrors.value = error.errors.map(err => err.message);
+    } else {
+      console.error('Form submission error:', error);
     }
   }
 };
 
 const handleDeletePost = async (postId: number) => {
-  await deletePostMutation.mutateAsync(postId);
+  try {
+    // Validate post ID
+    const validatedId = z.number().min(1).parse(postId);
+    await deletePostMutation.mutateAsync(validatedId);
+  } catch (error) {
+    console.error('Delete post error:', error);
+  }
 };
 </script>
 
@@ -440,6 +515,25 @@ const handleDeletePost = async (postId: number) => {
 
 .form-error {
   margin-top: 0;
+}
+
+.validation-errors {
+  margin-bottom: 1rem;
+}
+
+.validation-error {
+  margin-bottom: 0.5rem;
+}
+
+.p-invalid {
+  border-color: #ef4444 !important;
+}
+
+.p-error {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
 }
 
 /* Responsive */
