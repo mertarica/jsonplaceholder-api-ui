@@ -4,6 +4,7 @@ import { userApi } from '@/services/apiService';
 const QUERY_OPTIONS = {
   staleTime: 5 * 60 * 1000,
   refetchOnWindowFocus: false,
+  throwOnError: true,
 };
 
 export const useUsers = () => {

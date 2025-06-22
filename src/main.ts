@@ -17,6 +17,8 @@ import Textarea from 'primevue/textarea';
 import ProgressSpinner from 'primevue/progressspinner';
 import Message from 'primevue/message';
 
+import ErrorBoundary from '@/components/ErrorBoundary.vue';
+
 import '@/assets/main.css';
 import 'primeicons/primeicons.css';
 
@@ -45,5 +47,7 @@ app.component('InputText', InputText);
 app.component('Textarea', Textarea);
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('Message', Message);
+
+app.component('ErrorBoundary', ErrorBoundary);
 
 app.mount('#app');

@@ -1,65 +1,76 @@
 <template>
-  <div class="users-page">
-    <div class="page-header">
-      <h2>Users</h2>
-      <p>Manage and view user information</p>
+  <ErrorBoundary
+    fallback-title="User Detail Error"
+    fallback-message="Failed to load user details."
+    @error="handleUserError"
+  >
+    <div class="users-page">
+      <div class="page-header">
+        <h2>Users</h2>
+        <p>Manage and view user information</p>
+      </div>
+
+      <Message v-if="error" severity="error" :closable="false">
+        {{ error.message }}
+      </Message>
+
+      <div v-if="isLoading" class="loading">
+        <ProgressSpinner />
+        <p>Loading users...</p>
+      </div>
+
+      <div v-else-if="data" class="table-wrapper">
+        <DataTable
+          :value="data"
+          stripedRows
+          :paginator="true"
+          :rows="10"
+          :rowsPerPageOptions="[5, 10, 25]"
+        >
+          <Column field="name" header="Name" sortable>
+            <template #body="{ data }">
+              <router-link :to="`/users/${data.id}`" class="user-link">
+                <Avatar :label="data.name.charAt(0)" class="user-avatar" />
+                <div>
+                  <div class="user-name">{{ data.name }}</div>
+                  <small>@{{ data.username }}</small>
+                </div>
+              </router-link>
+            </template>
+          </Column>
+
+          <Column field="email" header="Email" sortable>
+            <template #body="{ data }">
+              <span>{{ data.email }}</span>
+            </template>
+          </Column>
+
+          <Column field="phone" header="Phone">
+            <template #body="{ data }">
+              <span>{{ data.phone }}</span>
+            </template>
+          </Column>
+
+          <Column field="company.name" header="Company" sortable>
+            <template #body="{ data }">
+              <span>{{ data.company.name }}</span>
+            </template>
+          </Column>
+        </DataTable>
+      </div>
     </div>
-
-    <Message v-if="error" severity="error" :closable="false">
-      {{ error.message }}
-    </Message>
-
-    <div v-if="isLoading" class="loading">
-      <ProgressSpinner />
-      <p>Loading users...</p>
-    </div>
-
-    <div v-else-if="data" class="table-wrapper">
-      <DataTable
-        :value="data"
-        stripedRows
-        :paginator="true"
-        :rows="10"
-        :rowsPerPageOptions="[5, 10, 25]"
-      >
-        <Column field="name" header="Name" sortable>
-          <template #body="{ data }">
-            <router-link :to="`/users/${data.id}`" class="user-link">
-              <Avatar :label="data.name.charAt(0)" class="user-avatar" />
-              <div>
-                <div class="user-name">{{ data.name }}</div>
-                <small>@{{ data.username }}</small>
-              </div>
-            </router-link>
-          </template>
-        </Column>
-
-        <Column field="email" header="Email" sortable>
-          <template #body="{ data }">
-            <span>{{ data.email }}</span>
-          </template>
-        </Column>
-
-        <Column field="phone" header="Phone">
-          <template #body="{ data }">
-            <span>{{ data.phone }}</span>
-          </template>
-        </Column>
-
-        <Column field="company.name" header="Company" sortable>
-          <template #body="{ data }">
-            <span>{{ data.company.name }}</span>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
-  </div>
+  </ErrorBoundary>
 </template>
 
 <script setup lang="ts">
 import { useUsers } from '@/composables/useUsers';
 
 const { data, isLoading, error } = useUsers();
+
+const handleUserError = (error: Error, info: string) => {
+  console.error('User Detail Error:', error);
+  console.error('Error Info:', info);
+};
 </script>
 
 <style scoped>

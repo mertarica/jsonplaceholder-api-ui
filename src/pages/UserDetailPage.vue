@@ -1,160 +1,192 @@
 <template>
-  <div class="user-detail">
-    <div v-if="userLoading || postsLoading" class="loading">
-      <ProgressSpinner />
-      <p>Loading...</p>
-    </div>
-
-    <Message v-if="userError || postsError" severity="error" :closable="false">
-      {{ userError?.message || postsError?.message }}
-    </Message>
-
-    <div v-if="userData" class="content-grid">
-      <!-- User Profile -->
-      <div class="profile-column">
-        <Card class="profile-card">
-          <template #header>
-            <div class="profile-header">
-              <Avatar
-                :label="userData.name.charAt(0)"
-                size="xlarge"
-                class="profile-avatar"
-              />
-              <h2>{{ userData.name }}</h2>
-              <p>@{{ userData.username }}</p>
-            </div>
-          </template>
-
-          <template #content>
-            <div class="profile-details">
-              <div class="detail">
-                <i class="pi pi-envelope"></i>
-                <div>
-                  <label>Email</label>
-                  <span>{{ userData.email }}</span>
-                </div>
-              </div>
-
-              <div class="detail">
-                <i class="pi pi-phone"></i>
-                <div>
-                  <label>Phone</label>
-                  <span>{{ userData.phone }}</span>
-                </div>
-              </div>
-
-              <div class="detail">
-                <i class="pi pi-globe"></i>
-                <div>
-                  <label>Website</label>
-                  <span>{{ userData.website }}</span>
-                </div>
-              </div>
-
-              <div class="detail">
-                <i class="pi pi-map-marker"></i>
-                <div>
-                  <label>Address</label>
-                  <span
-                    >{{ userData.address.street }},
-                    {{ userData.address.city }}</span
-                  >
-                </div>
-              </div>
-
-              <div class="detail">
-                <i class="pi pi-building"></i>
-                <div>
-                  <label>Company</label>
-                  <span>{{ userData.company.name }}</span>
-                </div>
-              </div>
-            </div>
-          </template>
-        </Card>
+  <ErrorBoundary
+    fallback-title="User Detail Error"
+    fallback-message="Failed to load user details."
+    @error="handleUserError"
+  >
+    <div class="user-detail">
+      <div v-if="userLoading || postsLoading" class="loading">
+        <ProgressSpinner />
+        <p>Loading...</p>
       </div>
 
-      <!-- Posts -->
-      <div class="posts-column">
-        <Card>
-          <template #title>
-            <div class="posts-header">
-              <h3>Posts</h3>
-              <small>{{ postsData?.length || 0 }} total</small>
-            </div>
-          </template>
+      <Message
+        v-if="userError || postsError"
+        severity="error"
+        :closable="false"
+      >
+        {{ userError?.message || postsError?.message }}
+      </Message>
 
-          <template #content>
-            <!-- Add Post -->
-            <div class="add-post">
-              <h4>Create Post</h4>
-              <form @submit.prevent="handleAddPost" class="post-form">
-                <InputText
-                  v-model="newPost.title"
-                  placeholder="Post title..."
-                  :disabled="createPostMutation.isPending.value"
+      <div v-if="userData" class="content-grid">
+        <!-- User Profile -->
+        <div class="profile-column">
+          <Card class="profile-card">
+            <template #header>
+              <div class="profile-header">
+                <Avatar
+                  :label="userData.name.charAt(0)"
+                  size="xlarge"
+                  class="profile-avatar"
                 />
-                <Textarea
-                  v-model="newPost.body"
-                  placeholder="Write something..."
-                  :disabled="createPostMutation.isPending.value"
-                  rows="3"
-                />
-                <Button
-                  type="submit"
-                  label="Publish"
-                  icon="pi pi-send"
-                  :loading="createPostMutation.isPending.value"
-                  :disabled="!newPost.title || !newPost.body"
-                />
-              </form>
-            </div>
-
-            <!-- Posts List -->
-            <div v-if="postsData?.length" class="posts-list">
-              <div v-for="post in paginatedPosts" :key="post.id" class="post">
-                <div class="post-content">
-                  <h5>{{ post.title }}</h5>
-                  <p>{{ post.body }}</p>
-                </div>
-                <Button
-                  icon="pi pi-trash"
-                  severity="danger"
-                  text
-                  @click="handleDeletePost(post.id)"
-                  :loading="deletePostMutation.isPending.value"
-                />
+                <h2>{{ userData.name }}</h2>
+                <p>@{{ userData.username }}</p>
               </div>
-            </div>
+            </template>
 
-            <div v-else class="no-posts">
-              <i class="pi pi-inbox"></i>
-              <p>No posts yet</p>
-            </div>
+            <template #content>
+              <div class="profile-details">
+                <div class="detail">
+                  <i class="pi pi-envelope"></i>
+                  <div>
+                    <label>Email</label>
+                    <span>{{ userData.email }}</span>
+                  </div>
+                </div>
 
-            <!-- Pagination -->
-            <div v-if="totalPages > 1" class="pagination">
-              <Button
-                icon="pi pi-angle-left"
-                text
-                @click="postStore.goToPreviousPage()"
-                :disabled="postStore.currentPage === 0"
-              />
-              <span
-                >Page {{ postStore.currentPage + 1 }} of {{ totalPages }}</span
+                <div class="detail">
+                  <i class="pi pi-phone"></i>
+                  <div>
+                    <label>Phone</label>
+                    <span>{{ userData.phone }}</span>
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <i class="pi pi-globe"></i>
+                  <div>
+                    <label>Website</label>
+                    <span>{{ userData.website }}</span>
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <i class="pi pi-map-marker"></i>
+                  <div>
+                    <label>Address</label>
+                    <span
+                      >{{ userData.address.street }},
+                      {{ userData.address.city }}</span
+                    >
+                  </div>
+                </div>
+
+                <div class="detail">
+                  <i class="pi pi-building"></i>
+                  <div>
+                    <label>Company</label>
+                    <span>{{ userData.company.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </Card>
+        </div>
+
+        <!-- Posts -->
+        <div class="posts-column">
+          <Card>
+            <template #title>
+              <div class="posts-header">
+                <h3>Posts</h3>
+                <small>{{ postsData?.length || 0 }} total</small>
+              </div>
+            </template>
+
+            <template #content>
+              <!-- Add Post -->
+              <div class="add-post">
+                <h4>Create Post</h4>
+
+                <!-- Create Post Error -->
+                <Message
+                  v-if="createPostMutation.isError.value"
+                  severity="error"
+                  :closable="false"
+                  class="form-error"
+                >
+                  Failed to create post. Please try again.
+                </Message>
+
+                <form @submit.prevent="handleAddPost" class="post-form">
+                  <InputText
+                    v-model="newPost.title"
+                    placeholder="Post title..."
+                    :disabled="createPostMutation.isPending.value"
+                  />
+                  <Textarea
+                    v-model="newPost.body"
+                    placeholder="Write something..."
+                    :disabled="createPostMutation.isPending.value"
+                    rows="3"
+                  />
+                  <Button
+                    type="submit"
+                    label="Publish"
+                    icon="pi pi-send"
+                    :loading="createPostMutation.isPending.value"
+                    :disabled="!newPost.title || !newPost.body"
+                  />
+                </form>
+              </div>
+
+              <!-- Delete Error -->
+              <Message
+                v-if="deletePostMutation.isError.value"
+                severity="error"
+                :closable="false"
+                class="delete-error"
               >
-              <Button
-                icon="pi pi-angle-right"
-                text
-                @click="postStore.goToNextPage(totalPages)"
-                :disabled="postStore.currentPage >= totalPages - 1"
-              />
-            </div>
-          </template>
-        </Card>
+                Failed to delete post. Please try again.
+              </Message>
+
+              <!-- Posts List -->
+              <div v-if="postsData?.length" class="posts-list">
+                <div v-for="post in paginatedPosts" :key="post.id" class="post">
+                  <div class="post-content">
+                    <h5>{{ post.title }}</h5>
+                    <p>{{ post.body }}</p>
+                  </div>
+                  <Button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    text
+                    @click="handleDeletePost(post.id)"
+                    :loading="deletePostMutation.isPending.value"
+                  />
+                </div>
+              </div>
+
+              <div v-else class="no-posts">
+                <i class="pi pi-inbox"></i>
+                <p>No posts yet</p>
+              </div>
+
+              <!-- Pagination -->
+              <div v-if="totalPages > 1" class="pagination">
+                <Button
+                  icon="pi pi-angle-left"
+                  text
+                  @click="postStore.goToPreviousPage()"
+                  :disabled="postStore.currentPage === 0"
+                />
+                <span
+                  >Page {{ postStore.currentPage + 1 }} of
+                  {{ totalPages }}</span
+                >
+                <Button
+                  icon="pi pi-angle-right"
+                  text
+                  @click="postStore.goToNextPage(totalPages)"
+                  :disabled="postStore.currentPage >= totalPages - 1"
+                />
+              </div>
+            </template>
+          </Card>
+        </div>
       </div>
     </div>
-  </div>
+  </ErrorBoundary>
 </template>
 
 <script setup lang="ts">
@@ -208,15 +240,24 @@ const newPost = reactive({
   body: '',
 });
 
+const handleUserError = (error: Error, info: string) => {
+  console.error('User Detail Error:', error);
+  console.error('Error Info:', info);
+};
+
 const handleAddPost = async () => {
   if (newPost.title && newPost.body && userData.value) {
-    await createPostMutation.mutateAsync({
+    const result = await createPostMutation.mutateAsync({
       title: newPost.title,
       body: newPost.body,
       userId: userData.value.id,
     });
-    newPost.title = '';
-    newPost.body = '';
+
+    // Only clear form if successful
+    if (result) {
+      newPost.title = '';
+      newPost.body = '';
+    }
   }
 };
 
@@ -390,6 +431,15 @@ const handleDeletePost = async (postId: number) => {
   gap: 1rem;
   padding-top: 1rem;
   border-top: 1px solid #e5e7eb;
+}
+
+.form-error,
+.delete-error {
+  margin-bottom: 1rem;
+}
+
+.form-error {
+  margin-top: 0;
 }
 
 /* Responsive */
