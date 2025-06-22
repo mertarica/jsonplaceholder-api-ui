@@ -89,7 +89,10 @@
             <template #title>
               <div class="posts-header">
                 <h3>Posts</h3>
-                <small>{{ postsData?.length || 0 }} total</small>
+                <small
+                  >Page {{ currentPage + 1 }} of
+                  {{ PAGINATION_CONFIG.TOTAL_PAGES }}</small
+                >
               </div>
             </template>
 
@@ -128,7 +131,9 @@
                     :disabled="createPostMutation.isPending.value"
                     :class="{ 'p-invalid': titleError }"
                   />
-                  <small v-if="titleError" class="p-error">{{ titleError }}</small>
+                  <small v-if="titleError" class="p-error">{{
+                    titleError
+                  }}</small>
 
                   <Textarea
                     v-model="newPost.body"
@@ -137,7 +142,9 @@
                     rows="3"
                     :class="{ 'p-invalid': bodyError }"
                   />
-                  <small v-if="bodyError" class="p-error">{{ bodyError }}</small>
+                  <small v-if="bodyError" class="p-error">{{
+                    bodyError
+                  }}</small>
 
                   <Button
                     type="submit"
@@ -159,9 +166,13 @@
                 Failed to delete post. Please try again.
               </Message>
 
-              <!-- Posts List -->
-              <div v-if="postsData?.length" class="posts-list">
-                <div v-for="post in paginatedPosts" :key="post.id" class="post">
+              <div v-if="postsLoading" class="posts-loading">
+                <ProgressSpinner size="small" />
+                <p>Loading posts...</p>
+              </div>
+
+              <div v-else-if="postsData?.length" class="posts-list">
+                <div v-for="post in postsData" :key="post.id" class="post">
                   <div class="post-content">
                     <h5>{{ post.title }}</h5>
                     <p>{{ post.body }}</p>
@@ -181,23 +192,26 @@
                 <p>No posts yet</p>
               </div>
 
-              <!-- Pagination -->
-              <div v-if="totalPages > 1" class="pagination">
+              <!-- Server-side Pagination -->
+              <div class="pagination">
                 <Button
                   icon="pi pi-angle-left"
                   text
-                  @click="postStore.goToPreviousPage()"
-                  :disabled="postStore.currentPage === 0"
+                  @click="goToPreviousPage()"
+                  :disabled="currentPage === 0 || postsLoading"
                 />
                 <span
-                  >Page {{ postStore.currentPage + 1 }} of
-                  {{ totalPages }}</span
+                  >Page {{ currentPage + 1 }} of
+                  {{ PAGINATION_CONFIG.TOTAL_PAGES }}</span
                 >
                 <Button
                   icon="pi pi-angle-right"
                   text
-                  @click="postStore.goToNextPage(totalPages)"
-                  :disabled="postStore.currentPage >= totalPages - 1"
+                  @click="goToNextPage()"
+                  :disabled="
+                    currentPage >= PAGINATION_CONFIG.TOTAL_PAGES - 1 ||
+                    postsLoading
+                  "
                 />
               </div>
             </template>
@@ -210,10 +224,13 @@
 
 <script setup lang="ts">
 import { computed, reactive, watch, ref } from 'vue';
-import { storeToRefs } from 'pinia';
 import { useUser } from '@/composables/useUsers';
-import { usePosts, useCreatePost, useDeletePost } from '@/composables/usePosts';
-import { usePostStore } from '@/stores/postStore';
+import {
+  usePosts,
+  useCreatePost,
+  useDeletePost,
+  PAGINATION_CONFIG,
+} from '@/composables/usePosts';
 import { CreatePostRequestSchema } from '@/schemas/post';
 import { z } from 'zod';
 
@@ -224,36 +241,38 @@ interface Props {
 const props = defineProps<Props>();
 const userId = computed(() => parseInt(props.id));
 
-const postStore = usePostStore();
-const { currentPage, postsPerPage } = storeToRefs(postStore);
+// Server-side pagination state
+const currentPage = ref(0);
 
 const {
   data: userData,
   isLoading: userLoading,
   error: userError,
 } = useUser(userId.value);
+
 const {
   data: postsData,
   isLoading: postsLoading,
   error: postsError,
-} = usePosts(userId.value);
+} = usePosts(userId, currentPage);
 
 const createPostMutation = useCreatePost();
 const deletePostMutation = useDeletePost();
 
-const totalPages = computed(() =>
-  postsData.value ? Math.ceil(postsData.value.length / postsPerPage.value) : 0
-);
+const goToNextPage = () => {
+  if (currentPage.value < PAGINATION_CONFIG.TOTAL_PAGES - 1) {
+    currentPage.value++;
+  }
+};
 
-const paginatedPosts = computed(() => {
-  if (!postsData.value) return [];
-  const start = currentPage.value * postsPerPage.value;
-  const end = start + postsPerPage.value;
-  return postsData.value.slice(start, end);
-});
+const goToPreviousPage = () => {
+  if (currentPage.value > 0) {
+    currentPage.value--;
+  }
+};
 
-watch(postsData, () => {
-  postStore.resetPagination();
+watch(userId, () => {
+  currentPage.value = 0;
 });
 
 const newPost = reactive({
@@ -261,82 +280,90 @@ const newPost = reactive({
   body: '',
 });
 
-// Validation
 const validationErrors = ref<string[]>([]);
 const titleError = ref('');
 const bodyError = ref('');
 
 const isFormValid = computed(() => {
-  return newPost.title.trim() && newPost.body.trim() && !titleError.value && !bodyError.value;
+  return (
+    newPost.title.trim() &&
+    newPost.body.trim() &&
+    !titleError.value &&
+    !bodyError.value
+  );
 });
 
-// Real-time validation
-watch(() => newPost.title, (newTitle) => {
-  try {
-    z.string().min(1, 'Title is required').parse(newTitle.trim());
-    titleError.value = '';
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      titleError.value = error.errors[0]?.message || 'Invalid title';
+watch(
+  () => newPost.title,
+  (newTitle) => {
+    try {
+      z.string().min(1, 'Title is required').parse(newTitle.trim());
+      titleError.value = '';
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        titleError.value = error.errors[0]?.message || 'Invalid title';
+      }
     }
   }
-});
+);
 
-watch(() => newPost.body, (newBody) => {
-  try {
-    z.string().min(1, 'Body is required').parse(newBody.trim());
-    bodyError.value = '';
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      bodyError.value = error.errors[0]?.message || 'Invalid body';
+watch(
+  () => newPost.body,
+  (newBody) => {
+    try {
+      z.string().min(1, 'Body is required').parse(newBody.trim());
+      bodyError.value = '';
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        bodyError.value = error.errors[0]?.message || 'Invalid body';
+      }
     }
   }
-});
+);
 
 const handleUserError = (error: Error, info: string) => {
-  console.error('User Detail Error:', error);
-  console.error('Error Info:', info);
+  console.error('User detail error:', error, info);
+  userError.value = error;
 };
 
 const handleAddPost = async () => {
   if (!userData.value) return;
-  
-  // Clear previous validation errors
+
   validationErrors.value = [];
-  
+
   try {
-    // Validate with Zod
     const validatedPost = CreatePostRequestSchema.parse({
       title: newPost.title.trim(),
       body: newPost.body.trim(),
       userId: userData.value.id,
     });
-    
+
     const result = await createPostMutation.mutateAsync(validatedPost);
-    
-    // Only clear form if successful
+
     if (result) {
       newPost.title = '';
       newPost.body = '';
       titleError.value = '';
       bodyError.value = '';
+      currentPage.value = 0;
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      validationErrors.value = error.errors.map(err => err.message);
-    } else {
-      console.error('Form submission error:', error);
+      validationErrors.value = error.errors.map((err) => err.message);
     }
   }
 };
 
 const handleDeletePost = async (postId: number) => {
   try {
-    // Validate post ID
     const validatedId = z.number().min(1).parse(postId);
     await deletePostMutation.mutateAsync(validatedId);
   } catch (error) {
-    console.error('Delete post error:', error);
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.errors);
+    } else {
+      console.error('Delete post error:', error);
+    }
   }
 };
 </script>
@@ -534,6 +561,20 @@ const handleDeletePost = async (postId: number) => {
   font-size: 0.75rem;
   margin-top: 0.25rem;
   display: block;
+}
+
+.posts-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem;
+  gap: 1rem;
+  color: #6b7280;
+}
+
+.posts-loading p {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 /* Responsive */
