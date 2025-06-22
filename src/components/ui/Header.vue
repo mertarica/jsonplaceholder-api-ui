@@ -2,16 +2,15 @@
   <header class="header">
     <div class="header-content">
       <div class="logo">
-        <i class="pi pi-users"></i>
-        <h1>UserHub</h1>
+        <RouterLink to="/" class="logo-link">
+          <i class="pi pi-users"></i>
+          <h1>UserHub</h1>
+        </RouterLink>
       </div>
 
       <nav class="nav">
         <router-link to="/users" class="nav-link">
           <Button label="Users" icon="pi pi-list" text />
-        </router-link>
-        <router-link to="/users/1" class="nav-link">
-          <Button label="Profile" icon="pi pi-user" text />
         </router-link>
       </nav>
     </div>
@@ -53,6 +52,13 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
 }
 
 .nav {

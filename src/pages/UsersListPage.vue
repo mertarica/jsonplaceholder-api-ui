@@ -1,13 +1,13 @@
 <template>
   <ErrorBoundary
-    fallback-title="User Detail Error"
-    fallback-message="Failed to load user details."
+    fallback-title="Users List Error"
+    fallback-message="Failed to load users."
     @error="handleUserError"
   >
     <div class="users-page">
       <div class="page-header">
         <h2>Users</h2>
-        <p>Manage and view user information</p>
+        <p>Browse user profiles</p>
       </div>
 
       <Message v-if="error" severity="error" :closable="false">
@@ -19,44 +19,28 @@
         <p>Loading users...</p>
       </div>
 
-      <div v-else-if="data" class="table-wrapper">
-        <DataTable
-          :value="data"
-          stripedRows
-          :paginator="true"
-          :rows="10"
-          :rowsPerPageOptions="[5, 10, 25]"
-        >
-          <Column field="name" header="Name" sortable>
-            <template #body="{ data }">
-              <router-link :to="`/users/${data.id}`" class="user-link">
-                <Avatar :label="data.name.charAt(0)" class="user-avatar" />
+      <div v-else-if="data" class="users-content">
+        <!-- Search Filter -->
+        <InputText
+          v-model="searchQuery"
+          placeholder="Search users..."
+          class="search-input"
+        />
+
+        <!-- Users Grid -->
+        <div class="users-grid">
+          <Card v-for="user in filteredUsers" :key="user.id" class="user-card">
+            <template #content>
+              <router-link :to="`/users/${user.id}`" class="user-link">
+                <Avatar :label="user.name.charAt(0)" class="user-avatar" />
                 <div>
-                  <div class="user-name">{{ data.name }}</div>
-                  <small>@{{ data.username }}</small>
+                  <div class="user-name">{{ user.name }}</div>
+                  <small>@{{ user.username }}</small>
                 </div>
               </router-link>
             </template>
-          </Column>
-
-          <Column field="email" header="Email" sortable>
-            <template #body="{ data }">
-              <span>{{ data.email }}</span>
-            </template>
-          </Column>
-
-          <Column field="phone" header="Phone">
-            <template #body="{ data }">
-              <span>{{ data.phone }}</span>
-            </template>
-          </Column>
-
-          <Column field="company.name" header="Company" sortable>
-            <template #body="{ data }">
-              <span>{{ data.company.name }}</span>
-            </template>
-          </Column>
-        </DataTable>
+          </Card>
+        </div>
       </div>
     </div>
   </ErrorBoundary>
@@ -64,8 +48,18 @@
 
 <script setup lang="ts">
 import { useUsers } from '@/composables/useUsers';
+import { computed, ref } from 'vue';
 
 const { data, isLoading, error } = useUsers();
+const searchQuery = ref('');
+
+const filteredUsers = computed(() => {
+  if (!data.value || !searchQuery.value.trim()) {
+    return data.value || [];
+  }
+  const query = searchQuery.value.toLowerCase();
+  return data.value.filter((user) => user.name.toLowerCase().includes(query));
+});
 
 const handleUserError = (error: Error, info: string) => {
   console.error('User Detail Error:', error);
@@ -100,11 +94,24 @@ const handleUserError = (error: Error, info: string) => {
   gap: 1rem;
 }
 
-.table-wrapper {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.users-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.search-input {
+  max-width: 300px;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
 }
 
 .user-link {
@@ -113,11 +120,9 @@ const handleUserError = (error: Error, info: string) => {
   gap: 0.75rem;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s;
 }
 
 .user-link:hover {
-  transform: translateX(2px);
   color: #3b82f6;
 }
 
