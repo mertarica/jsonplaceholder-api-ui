@@ -20,7 +20,6 @@ import ErrorBoundary from '@/components/ErrorBoundary.vue';
 const handleGlobalError = (error: Error, info: string) => {
   console.error('Application Error:', error);
   console.error('Error Info:', info);
-
   // we can trigger monitoring servies here like sentry etc.
 };
 

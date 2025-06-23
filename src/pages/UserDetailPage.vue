@@ -82,7 +82,6 @@ import {
 import { CreatePostRequestSchema } from '@/schemas/post';
 import { z } from 'zod';
 
-// Components
 import UserProfile from '@/components/UserProfile.vue';
 import CreatePostForm from '@/components/post/CreatePostForm.vue';
 import PostsList from '@/components/post/PostsList.vue';
@@ -96,7 +95,6 @@ const props = defineProps<Props>();
 const userId = computed(() => parseInt(props.id));
 const currentPage = ref(0);
 
-// Queries & Mutations
 const {
   data: userData,
   isLoading: userLoading,
@@ -112,7 +110,6 @@ const {
 const createPostMutation = useCreatePost();
 const deletePostMutation = useDeletePost();
 
-// Pagination
 const goToNextPage = () => {
   if (currentPage.value < PAGINATION_CONFIG.TOTAL_PAGES - 1) {
     currentPage.value++;

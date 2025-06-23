@@ -5,8 +5,7 @@ import { z } from 'zod';
 import type { PaginationParams } from '@/types/api';
 import { computed, type Ref } from 'vue';
 
-// We know from the API that each user has a maximum of 10 posts
-// With 3 posts per page, we'll have 4 pages total (3+3+3+1=10)
+// 3 posts per page, 4 pages total (10 posts max)
 const POSTS_PER_PAGE = 3;
 const MAX_POSTS_PER_USER = 10;
 const TOTAL_PAGES = Math.ceil(MAX_POSTS_PER_USER / POSTS_PER_PAGE);

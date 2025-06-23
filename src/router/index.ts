@@ -36,8 +36,7 @@ const router = createRouter({
   ],
 });
 
-router.onError((error) => {
-  console.error('Router error:', error);
+router.onError(() => {
   router.push('/error');
 });
 

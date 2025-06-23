@@ -37,7 +37,6 @@ app.use(PrimeVue, {
 });
 app.use(VueQueryPlugin);
 
-// Register components
 app.component('Avatar', Avatar);
 app.component('Button', Button);
 app.component('DataTable', DataTable);

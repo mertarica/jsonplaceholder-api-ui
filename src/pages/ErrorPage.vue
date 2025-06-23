@@ -1,4 +1,3 @@
-<!-- filepath: src/pages/ErrorPage.vue -->
 <template>
   <div class="error-page">
     <Card class="error-card">

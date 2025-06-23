@@ -79,16 +79,14 @@ const validationErrors = ref<string[]>([]);
 const titleError = ref('');
 const bodyError = ref('');
 
-const isFormValid = computed(() => {
-  return (
+const isFormValid = computed(
+  () =>
     form.title.trim() &&
     form.body.trim() &&
     !titleError.value &&
     !bodyError.value
-  );
-});
+);
 
-// Real-time validation
 watch(
   () => form.title,
   (newTitle) => {
