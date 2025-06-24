@@ -8,6 +8,7 @@ import {
 } from '@/schemas/post';
 import { z } from 'zod';
 
+// I didn't use environment variables here for simplicity, but in a real application, I would typically use them to configure the base URL
 const BASE_URL = 'https://jsonplaceholder.typicode.com';
 
 class ApiError extends Error {

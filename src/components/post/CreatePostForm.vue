@@ -15,7 +15,6 @@
       </Message>
     </div>
 
-    <!-- Create Post Error -->
     <Message
       v-if="isError"
       severity="error"
@@ -121,7 +120,6 @@ const handleSubmit = () => {
     body: form.body.trim(),
   });
 
-  // Clear form after successful submission
   form.title = '';
   form.body = '';
   titleError.value = '';

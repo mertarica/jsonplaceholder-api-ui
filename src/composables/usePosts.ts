@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { postApi } from '@/services/apiService';
-import { CreatePostRequestSchema } from '@/schemas/post';
+import { CreatePostRequestSchema, type CreatePostRequest } from '@/schemas/post';
 import { z } from 'zod';
 import type { PaginationParams } from '@/types/api';
 import { computed, type Ref } from 'vue';
@@ -31,7 +31,7 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (post: unknown) => {
+    mutationFn: async (post: CreatePostRequest) => {
       const validatedPost = CreatePostRequestSchema.parse(post);
       return postApi.createPost(validatedPost);
     },
@@ -56,11 +56,14 @@ export const useDeletePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (postId: unknown) => {
+    mutationFn: async (postId: number) => {
       const validatedId = z.number().min(1, 'Invalid post ID').parse(postId);
       return postApi.deletePost(validatedId);
     },
     onSuccess: () => {
+      // Note: JSONPlaceholder is a fake API - posts aren't actually deleted from the server
+      // when the API returns 200 the data stilll persists, so invalidating queries will still show the "deleted" post
+      // I could use optimistic updates to remove the post from the cache, but for real the product, I would just invalidate the query
       queryClient.invalidateQueries({
         queryKey: ['posts'],
         exact: false,
