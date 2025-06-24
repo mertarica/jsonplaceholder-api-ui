@@ -1,5 +1,48 @@
-# Vue 3 + TypeScript + Vite
+# User Management App
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A Vue 3 application for browsing users and managing their posts.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Features
+
+- Browse users with search functionality
+- View user details and company information
+- Responsive design
+
+## Tech Stack
+
+- Vue 3 + TypeScript
+- TanStack Query for data fetching
+- PrimeVue for UI components
+- Zod for validation
+- Vite for development
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI components
+│   ├── post/           # Post-related components
+│   └── ui/             # Layout components
+├── composables/        # Vue composables for state logic
+├── pages/              # Route components
+├── schemas/            # Zod validation schemas
+├── services/           # API service layer
+└── types/              # TypeScript type definitions
+```
+
+## API
+
+Uses [JSONPlaceholder](https://jsonplaceholder.typicode.com/) for demo data.
