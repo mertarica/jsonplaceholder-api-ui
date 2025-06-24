@@ -86,6 +86,7 @@ import UserProfile from '@/components/UserProfile.vue';
 import CreatePostForm from '@/components/post/CreatePostForm.vue';
 import PostsList from '@/components/post/PostsList.vue';
 import Pagination from '@/components/Pagination.vue';
+import { errorService } from '@/services/errorService';
 
 interface Props {
   id: string;
@@ -127,8 +128,10 @@ watch(userId, () => {
 });
 
 const handleUserError = (error: Error, info: string) => {
-  console.error('User Detail Error:', error);
-  console.error('Error Info:', info);
+  errorService.logError(error, {
+    context: 'user-detail-page-error-boundary',
+    info,
+  });
 };
 
 const handleCreatePost = async (formData: { title: string; body: string }) => {

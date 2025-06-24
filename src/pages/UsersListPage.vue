@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import { useUsers } from '@/composables/useUsers';
+import { errorService } from '@/services/errorService';
 import { computed, ref } from 'vue';
 
 const { data, isLoading, error } = useUsers();
@@ -62,8 +63,10 @@ const filteredUsers = computed(() => {
 });
 
 const handleUserError = (error: Error, info: string) => {
-  console.error('User Detail Error:', error);
-  console.error('Error Info:', info);
+  errorService.logError(error, {
+    context: 'user-list-page-error-boundary',
+    info,
+  });
 };
 </script>
 

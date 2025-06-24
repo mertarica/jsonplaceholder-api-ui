@@ -16,11 +16,13 @@
 <script setup lang="ts">
 import Layout from '@/components/ui/Layout.vue';
 import ErrorBoundary from '@/components/ErrorBoundary.vue';
+import { errorService } from './services/errorService';
 
 const handleGlobalError = (error: Error, info: string) => {
-  console.error('Application Error:', error);
-  console.error('Error Info:', info);
-  // we can trigger monitoring servies here like sentry etc.
+  errorService.logError(error, {
+    context: 'global-error-boundary',
+    info,
+  });
 };
 
 const handleRetry = () => {

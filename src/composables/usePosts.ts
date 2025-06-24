@@ -1,9 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query';
 import { postApi } from '@/services/apiService';
-import { CreatePostRequestSchema, type CreatePostRequest } from '@/schemas/post';
+import {
+  CreatePostRequestSchema,
+  type CreatePostRequest,
+} from '@/schemas/post';
 import { z } from 'zod';
 import type { PaginationParams } from '@/types/api';
 import { computed, type Ref } from 'vue';
+import { errorService } from '@/services/errorService';
 
 // 3 posts per page, 4 pages total (10 posts max)
 const POSTS_PER_PAGE = 3;
@@ -43,9 +47,9 @@ export const useCreatePost = () => {
     },
     onError: (error) => {
       if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.errors);
+        errorService.logError(error, { context: 'post-creation-validation' });
       } else {
-        console.error('Network error:', error);
+        errorService.logError(error, { context: 'post-creation-network' });
       }
     },
     throwOnError: false,
@@ -71,9 +75,9 @@ export const useDeletePost = () => {
     },
     onError: (error) => {
       if (error instanceof z.ZodError) {
-        // Validation error
+        errorService.logError(error, { context: 'post-deletion-validation' });
       } else {
-        // Network error
+        errorService.logError(error, { context: 'post-deletion-network' });
       }
     },
     throwOnError: false,
