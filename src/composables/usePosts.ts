@@ -40,6 +40,9 @@ export const useCreatePost = () => {
       return postApi.createPost(validatedPost);
     },
     onSuccess: (newPost) => {
+      // Note: JSONPlaceholder is a mockup API - posts aren't actually created in the server
+      // when the API returns 200 the data still static, so invalidating queries will not show the new created post
+      // I could use optimistic updates to show the post from the cache, but for real the product, I would just invalidate the query
       queryClient.invalidateQueries({
         queryKey: ['posts', newPost.userId],
         exact: false,
@@ -65,7 +68,7 @@ export const useDeletePost = () => {
       return postApi.deletePost(validatedId);
     },
     onSuccess: () => {
-      // Note: JSONPlaceholder is a fake API - posts aren't actually deleted from the server
+      // Note: JSONPlaceholder is a mockup API - posts aren't actually deleted from the server
       // when the API returns 200 the data stilll persists, so invalidating queries will still show the "deleted" post
       // I could use optimistic updates to remove the post from the cache, but for real the product, I would just invalidate the query
       queryClient.invalidateQueries({

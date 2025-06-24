@@ -150,7 +150,9 @@ const handleCreatePost = async (formData: { title: string; body: string }) => {
       currentPage.value = 0; // Reset to first page
     }
   } catch (error) {
-    // Error handled by mutation
+    errorService.logError(error, {
+      context: 'create-post',
+    });
   }
 };
 
@@ -159,7 +161,9 @@ const handleDeletePost = async (postId: number) => {
     const validatedId = z.number().min(1).parse(postId);
     await deletePostMutation.mutateAsync(validatedId);
   } catch (error) {
-    // Error handled by mutation
+    errorService.logError(error, {
+      context: 'post-deletion',
+    });
   }
 };
 </script>

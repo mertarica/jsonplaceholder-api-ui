@@ -86,40 +86,35 @@ const isFormValid = computed(
     !bodyError.value
 );
 
-watch(
-  () => form.title,
-  (newTitle) => {
-    try {
-      z.string().min(1, 'Title is required').parse(newTitle.trim());
-      titleError.value = '';
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        titleError.value = error.errors[0]?.message || 'Invalid title';
-      }
+const validateField = (value: string, fieldName: 'title' | 'body') => {
+  if (value === '') {
+    if (fieldName === 'title') titleError.value = '';
+    if (fieldName === 'body') bodyError.value = '';
+    return;
+  }
+
+  try {
+    z.string().min(1, `${fieldName} is required`).parse(value.trim());
+    if (fieldName === 'title') titleError.value = '';
+    if (fieldName === 'body') bodyError.value = '';
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessage = error.errors[0]?.message || `Invalid ${fieldName}`;
+      if (fieldName === 'title') titleError.value = errorMessage;
+      if (fieldName === 'body') bodyError.value = errorMessage;
     }
+  }
+};
+
+watch(
+  () => ({ title: form.title, body: form.body }),
+  ({ title, body }) => {
+    validateField(title, 'title');
+    validateField(body, 'body');
   }
 );
 
-watch(
-  () => form.body,
-  (newBody) => {
-    try {
-      z.string().min(1, 'Body is required').parse(newBody.trim());
-      bodyError.value = '';
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        bodyError.value = error.errors[0]?.message || 'Invalid body';
-      }
-    }
-  }
-);
-
-const handleSubmit = () => {
-  emit('submit', {
-    title: form.title.trim(),
-    body: form.body.trim(),
-  });
-
+const clearForm = () => {
   form.title = '';
   form.body = '';
   titleError.value = '';
@@ -127,8 +122,17 @@ const handleSubmit = () => {
   validationErrors.value = [];
 };
 
+const handleSubmit = () => {
+  emit('submit', {
+    title: form.title.trim(),
+    body: form.body.trim(),
+  });
+
+  clearForm();
+};
+
 defineExpose({
-  clearForm: handleSubmit,
+  clearForm,
 });
 </script>
 
