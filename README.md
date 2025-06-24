@@ -33,7 +33,7 @@ npm run build
 
 ```
 src/
-├── components/          # Reusable UI components
+├── components/         # Reusable UI components
 │   ├── post/           # Post-related components
 │   └── ui/             # Layout components
 ├── composables/        # Vue composables for state logic

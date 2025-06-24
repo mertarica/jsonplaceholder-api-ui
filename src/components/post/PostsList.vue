@@ -18,19 +18,22 @@
 
     <!-- Posts List -->
     <div v-else-if="posts?.length" class="posts-list">
-      <div v-for="post in posts" :key="post.id" class="post">
-        <div class="post-content">
-          <h5>{{ post.title }}</h5>
-          <p>{{ post.body }}</p>
+      <template v-for="(post, index) in posts" :key="post.id">
+        <div class="post">
+          <div class="post-content">
+            <h5>{{ post.title }}</h5>
+            <p>{{ post.body }}</p>
+          </div>
+          <Button
+            icon="pi pi-trash"
+            severity="danger"
+            text
+            @click="$emit('delete', post.id)"
+            :loading="isDeleting"
+          />
         </div>
-        <Button
-          icon="pi pi-trash"
-          severity="danger"
-          text
-          @click="$emit('delete', post.id)"
-          :loading="isDeleting"
-        />
-      </div>
+        <Divider v-if="index < posts.length - 1" />
+      </template>
     </div>
 
     <!-- No Posts -->
@@ -85,7 +88,6 @@ defineEmits<Emits>();
 .posts-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
 .post {
@@ -94,8 +96,6 @@ defineEmits<Emits>();
   align-items: flex-start;
   padding: 1.25rem;
   background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
   transition:
     background 0.2s ease,
     border-color 0.2s ease;
@@ -103,7 +103,6 @@ defineEmits<Emits>();
 
 .post:hover {
   background: var(--surface-hover);
-  border-color: var(--border-medium);
 }
 
 .post-content {
